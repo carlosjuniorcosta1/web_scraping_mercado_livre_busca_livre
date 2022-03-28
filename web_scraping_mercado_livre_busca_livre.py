@@ -9,8 +9,6 @@ Created on Mon Mar 28 16:24:47 2022
 from selenium import webdriver
 import pandas as pd
 import re
-import matplotlib.pyplot as plt
-import seaborn as sns 
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -88,6 +86,23 @@ df_ml['preco_atual'] = df_ml['preco_atual'].apply(lambda x: '0' if len(x) == 0 e
 df_ml['preco_atual'] = df_ml['preco_atual'].astype('int64')
 
 df_ml = df_ml.loc[df_ml['preco_atual'] != 0]
+
+df_ml['parcelas_sem_juros'] = df_ml['card_ml'].apply(lambda x: re.sub(r'(?!\d+(?=x)).*', '', x))
+df_ml['parcelas_sem_juros'] = df_ml['parcelas_sem_juros'].apply(lambda x: re.sub(r'\s+', '', x))
+df_ml['parcelas_sem_juros'] = df_ml['parcelas_sem_juros'].apply(lambda x: 0 if len(x) == 0 else x).apply(lambda x: int(x))
+df_ml['frete_gratis'] = df_ml['card_ml'].apply(lambda x: re.sub(r'(^(?!.*(Frete\sgrátis)).*)', '', x))
+
+df_ml['frete_gratis'] = df_ml['card_ml'].apply(lambda x: re.sub(r'((?!.*(Frete\sgrátis)).*)', '', x))
+df_ml['frete_gratis'] = df_ml['frete_gratis'].apply(lambda x: re.sub(r'\s+', '', x))
+df_ml['frete_gratis'] = df_ml['frete_gratis'].apply(lambda x: 'SIM' if x == 'F' else 'NÃO')
+
+
+
+df_ml['valor_parcela'] = df_ml['preco_cleaning_1'].apply(lambda x: '\n'.join(re.findall(r'\d+x\n(\d+)', x)))
+df_ml['valor_parcela']  = df_ml['valor_parcela'].apply(lambda x: '0' if len(x) == 0 else x)
+df_ml['valor_parcela'] = df_ml['valor_parcela'].astype('float')
+
+
 
 df_ml.to_csv('df_ml.csv')
 df_ml.to_excel('df_ml.xlsx')
